@@ -218,7 +218,7 @@ class CCDCesque(YATSM):
 
         while self.running:
 
-            while not self.monitoring and self.can_monitor:
+            while not self.monitoring: #  and self.can_monitor:
                 self.train()
                 self.here += 1
 
@@ -509,8 +509,9 @@ class CCDCesque(YATSM):
         """
         # Multitemporal noise removal
         mask = np.ones(self.X.shape[0], dtype=np.bool)
-        index = np.arange(self.start, self.here + self.consecutive,
-                          dtype=np.uint16)
+        _end = (self.here + self.consecutive if self.can_monitor
+                else self.here)
+        index = np.arange(self.start, _end, dtype=np.uint16)
         mask[index] = multitemp_mask(self.dates[index],
                                      self.Y[:, index],
                                      self.span_time / self.ndays,
@@ -519,7 +520,10 @@ class CCDCesque(YATSM):
                                      swir1=self.swir1_band)
 
         # Check if there are enough observations for model with noise removed
-        _span_index = mask[index][:-self.consecutive].sum()
+        if self.can_monitor:
+            _span_index = mask[index][:-self.consecutive].sum()
+        else:
+            _span_index = mask[index].sum()
 
         # Return if not enough observations
         if _span_index < self.min_obs:

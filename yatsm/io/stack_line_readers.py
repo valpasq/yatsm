@@ -14,11 +14,15 @@ Attributes:
     gdal_reader (_GDALStackReader): instance of :class:`_GDALStackReader` that
         reads from file formats supported by GDAL
 """
+import logging
+
 import numpy as np
 from osgeo import gdal, gdal_array
 
 gdal.AllRegister()
 gdal.UseExceptions()
+
+logger = logging.getLogger(__name__)
 
 
 class _BIPStackReader(object):
@@ -135,6 +139,9 @@ class _GDALStackReader(object):
                         self.datatype)
         for i, ds_bands in enumerate(self.dataset_bands):
             for n_b, band in enumerate(ds_bands):
+                logger.debug('data[{n_b}, {i}, :]'.format(n_b=n_b, i=i))
+                logger.debug('band.ReadAsArray(0, {row}, {n_col}, 1)'
+                             .format(row=row, n_col=self.n_col))
                 data[n_b, i, :] = band.ReadAsArray(0, row, self.n_col, 1)
         return data
 
